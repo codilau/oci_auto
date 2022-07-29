@@ -21,10 +21,10 @@ logging.basicConfig(
 ocpus = 4
 memory_in_gbs = ocpus*6
 wait_s_for_retry = 30
-instance_display_name = 'ubuntu-sg-oci*********'
+instance_display_name = '' # choose your own machine hostname
 compartment_id = 'ocid1.tenancy.oc1..**********************************'
 domain = "rhNU:AP-********************"  # availability_domain
-image_id = "ocid1.image.oc1.ap-singapore-1.*******************************"
+volume_id = "ocid1.image.oc1.ap-singapore-1.*******************************"
 subnet_id = 'ocid1.subnet.oc1.ap-singapore-1.********************'
 
 ssh_key = "ssh-rsa ************************"
@@ -58,7 +58,7 @@ telegram_notify(session, bot_api, chat_id, message)
 
 # Loading config file
 logging.info("Loading OCI config")
-config = oci.config.from_file(file_location="./config")
+config = oci.config.from_file() # assumes config file is in standard location, ~/.oci/config
 
 # Initialize service client
 logging.info("Initialize service client with default config file")
@@ -116,7 +116,7 @@ if instance_display_name in instance_names:
     telegram_notify(session, bot_api, chat_id, message)
     sys.exit()
 
-message = f"Precheck pass! Create new instance VM.Standard.A1.Flex: {ocpus} opus - {memory_in_gbs} GB"
+message = f"Precheck pass! Create new instance VM.Standard.A1.Flex: {ocpus} ocpus - {memory_in_gbs} GB"
 logging.info(message)
 telegram_notify(session, bot_api, chat_id, message)
 ######################################################################################################################
@@ -130,8 +130,8 @@ instance_detail = oci.core.models.LaunchInstanceDetails(
     shape='VM.Standard.A1.Flex',
     compartment_id=compartment_id,
     display_name=instance_display_name,
-    source_details=oci.core.models.InstanceSourceViaImageDetails(
-        source_type="image", image_id=image_id),
+    source_details=oci.core.models.InstanceSourceViaBootVolumeDetails(
+        source_type="bootVolume", boot_volume_id=volume_id),
     create_vnic_details=oci.core.models.CreateVnicDetails(
         assign_public_ip=False, subnet_id=subnet_id, assign_private_dns_record=True),
     agent_config=oci.core.models.LaunchInstanceAgentConfigDetails(
